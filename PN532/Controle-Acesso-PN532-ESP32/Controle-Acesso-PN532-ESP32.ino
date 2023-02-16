@@ -10,11 +10,11 @@
 PN532_I2C pn532i2c(Wire);
 PN532 nfc(pn532i2c);
 
-#define BUZZER_PIN 36
-#define SOLENOID_PIN 37
+#define BUZZER_PIN 35
+#define SOLENOID_PIN 39
 
-#define led_green 39
-#define led_red 34
+#define led_green 36
+#define led_red 37
 #define door_sens 38  //Sensor de fim de curso, o RFID só lerá outro cartão, quando a porta for fechada
 
 void setup(void) {
@@ -26,7 +26,7 @@ void setup(void) {
 
   pinMode(led_green, OUTPUT);
   pinMode(led_red, OUTPUT);
-  pinMode(door_sens, INPUT_PULLUP);  //Sensor de fim de curso, o RFID só lerá outro cartão, quando a porta for fechada
+  pinMode(door_sens, INPUT);  //Sensor de fim de curso, o RFID só lerá outro cartão, quando a porta for fechada
 
   //saídas iniciam desligadas
   digitalWrite(SOLENOID_PIN, HIGH);

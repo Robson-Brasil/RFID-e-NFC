@@ -8,9 +8,9 @@
  
 PN532_I2C pn532_i2c(Wire);
  
-int ledpin1=5;
+int ledpin1=36;
  
-int ledpin2=4;
+int ledpin2=37;
  
 NfcAdapternfc = NfcAdaptador(pn532_i2c);
  

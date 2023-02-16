@@ -9,7 +9,7 @@ PN532_I2C pn532i2c(Wire);
 PN532 nfc(pn532i2c);
 
 #define BUZZER_PIN 23
-#define SOLENOID_PIN 15
+#define SOLENOID_PIN 2
 
 void setup(void) {
   Serial.begin(115200);
