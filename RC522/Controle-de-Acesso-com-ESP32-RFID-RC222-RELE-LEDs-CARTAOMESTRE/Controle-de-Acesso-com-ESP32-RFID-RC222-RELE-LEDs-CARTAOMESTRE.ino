@@ -13,7 +13,7 @@ Versão : 5 - Alfa
 Última Modificação : 15/22/2023
 
    --------------------------------------------------------------------------------------------------------------------
-   Example sketch/program showing An Arduino Door Access Control featuring RFID, EEPROM, Relay
+   Example sketch/program showing An Arduino Door Access Control featuring RFID, EEPROM, Rele
    --------------------------------------------------------------------------------------------------------------------
    This is a MFRC522 library example; for further details and other examples see: https://github.com/miguelbalboa/rfid
 
@@ -104,12 +104,12 @@ Em vez de um relé, você pode querer usar um servo. Os servos também podem blo
 #define LED_OFF LOW
 #endif
 
-constexpr uint8_t redLed = 27;  // Set Led Pins
-constexpr uint8_t greenLed = 26;
-constexpr uint8_t blueLed = 25;
+constexpr uint8_t LedVermelho = 27;  // Set Led Pins
+constexpr uint8_t LedVerde = 26;
+constexpr uint8_t LedAzul = 25;
 
-constexpr uint8_t relay = 13;  // Set Relay Pin
-constexpr uint8_t wipeB = 33;  // Button pin for WipeMode
+constexpr uint8_t Rele = 13;  // Set Rele Pin
+constexpr uint8_t BotaoWipe = 33;  // Button pin for WipeMode
 
 boolean match = false;        // initialize card match to false
 boolean programMode = false;  // initialize programming mode to false
@@ -164,16 +164,16 @@ void setup() {
 
   //Arduino Pin Configuration
   pinMode(PortaAberta, INPUT_PULLUP);  //Sensor de fim de curso, o RFID só lerá outro cartão, quando a porta for fechada
-  pinMode(redLed, OUTPUT);
-  pinMode(greenLed, OUTPUT);
-  pinMode(blueLed, OUTPUT);
-  pinMode(wipeB, INPUT_PULLUP);  // Enable pin's pull up resistor
-  pinMode(relay, OUTPUT);
-  //Be careful how relay circuit behave on while resetting or power-cycling your Arduino
-  digitalWrite(relay, HIGH);        // Make sure door is locked
-  digitalWrite(redLed, LED_OFF);    // Make sure led is off
-  digitalWrite(greenLed, LED_OFF);  // Make sure led is off
-  digitalWrite(blueLed, LED_OFF);   // Make sure led is off
+  pinMode(LedVermelho, OUTPUT);
+  pinMode(LedVerde, OUTPUT);
+  pinMode(LedAzul, OUTPUT);
+  pinMode(BotaoWipe, INPUT_PULLUP);  // Enable pin's pull up resistor
+  pinMode(Rele, OUTPUT);
+  //Be careful how Rele circuit behave on while resetting or power-cycling your Arduino
+  digitalWrite(Rele, HIGH);        // Make sure door is locked
+  digitalWrite(LedVermelho, LED_OFF);    // Make sure led is off
+  digitalWrite(LedVerde, LED_OFF);  // Make sure led is off
+  digitalWrite(LedAzul, LED_OFF);   // Make sure led is off
 
   //Protocol Configuration
   Serial.begin(115200);  // Initialize serial communications with PC
@@ -186,14 +186,14 @@ void setup() {
   Serial.println(F("Controle de Acesso v0.1"));  // For debugging purposes
   ShowReaderDetails();                           // Show details of PCD - MFRC522 Card Reader details
 
-  //Wipe Code - If the Button (wipeB) Pressed while setup run (powered on) it wipes EEPROM
-  if (digitalRead(wipeB) == LOW) {  // when button pressed pin should get low, button connected to ground
-    digitalWrite(redLed, LED_ON);   // Red Led stays on to inform user we are going to wipe
+  //Wipe Code - If the Button (BotaoWipe) Pressed while setup run (powered on) it wipes EEPROM
+  if (digitalRead(BotaoWipe) == LOW) {  // when button pressed pin should get low, button connected to ground
+    digitalWrite(LedVermelho, LED_ON);   // Red Led stays on to inform user we are going to wipe
     Serial.println(F("Botao de formatacao apertado"));
     Serial.println(F("Voce tem 10 segundos para cancelar"));
     Serial.println(F("Isso vai apagar todos os seus registros e nao tem como desfazer"));
-    bool buttonState = monitorWipeButton(10000);             // Give user enough time to cancel operation
-    if (buttonState == true && digitalRead(wipeB) == LOW) {  // If button still be pressed, wipe EEPROM
+    bool buttonState = monitorBotaoWipeutton(10000);             // Give user enough time to cancel operation
+    if (buttonState == true && digitalRead(BotaoWipe) == LOW) {  // If button still be pressed, wipe EEPROM
       Serial.println(F("Inicio da formatacao da EEPROM"));
       for (uint16_t x = 0; x < EEPROM.length(); x = x + 1) {  //Loop end of EEPROM address
         if (EEPROM.read(x) == 0) {                            //If EEPROM address 0
@@ -203,18 +203,18 @@ void setup() {
         }
       }
       Serial.println(F("EEPROM formatada com sucesso"));
-      digitalWrite(redLed, LED_OFF);  // visualize a successful wipe
+      digitalWrite(LedVermelho, LED_OFF);  // visualize a successful wipe
       delay(200);
-      digitalWrite(redLed, LED_ON);
+      digitalWrite(LedVermelho, LED_ON);
       delay(200);
-      digitalWrite(redLed, LED_OFF);
+      digitalWrite(LedVermelho, LED_OFF);
       delay(200);
-      digitalWrite(redLed, LED_ON);
+      digitalWrite(LedVermelho, LED_ON);
       delay(200);
-      digitalWrite(redLed, LED_OFF);
+      digitalWrite(LedVermelho, LED_OFF);
     } else {
       Serial.println(F("Formatacao cancelada"));  // Show some feedback that the wipe button did not pressed for 15 seconds
-      digitalWrite(redLed, LED_OFF);
+      digitalWrite(LedVermelho, LED_OFF);
     }
   }
   // Check if master card defined, if not let user choose a master card
@@ -226,9 +226,9 @@ void setup() {
     Serial.println(F("Leia um chip para definir cartao Mestre"));
     do {
       successRead = getID();          // sets successRead to 1 when we get read from reader otherwise 0
-      digitalWrite(blueLed, LED_ON);  // Visualize Master Card need to be defined
+      digitalWrite(LedAzul, LED_ON);  // Visualize Master Card need to be defined
       delay(200);
-      digitalWrite(blueLed, LED_OFF);
+      digitalWrite(LedAzul, LED_OFF);
       delay(200);
     } while (!successRead);              // Program will not go further while you not get a successful read
     for (uint8_t j = 0; j < 4; j++) {    // Loop 4 times
@@ -270,16 +270,16 @@ void loop() {
   do {
     successRead = getID();  // sets successRead to 1 when we get read from reader otherwise 0
     // When device is in use if wipe button pressed for 10 seconds initialize Master Card wiping
-    if (digitalRead(wipeB) == LOW) {  // Check if button is pressed
+    if (digitalRead(BotaoWipe) == LOW) {  // Check if button is pressed
       // Visualize normal operation is iterrupted by pressing wipe button Red is like more Warning to user
-      digitalWrite(redLed, LED_ON);     // Make sure led is off
-      digitalWrite(greenLed, LED_OFF);  // Make sure led is off
-      digitalWrite(blueLed, LED_OFF);   // Make sure led is off
+      digitalWrite(LedVermelho, LED_ON);     // Make sure led is off
+      digitalWrite(LedVerde, LED_OFF);  // Make sure led is off
+      digitalWrite(LedAzul, LED_OFF);   // Make sure led is off
       // Give some feedback
       Serial.println(F("Botao de formatacao apertado"));
       Serial.println(F("O cartao Mestre sera apagado! em 10 segundos"));
-      bool buttonState = monitorWipeButton(10000);             // Give user enough time to cancel operation
-      if (buttonState == true && digitalRead(wipeB) == LOW) {  // If button still be pressed, wipe EEPROM
+      bool buttonState = monitorBotaoWipeutton(10000);             // Give user enough time to cancel operation
+      if (buttonState == true && digitalRead(BotaoWipe) == LOW) {  // If button still be pressed, wipe EEPROM
         EEPROM.write(1, 0);                                    // Reset Magic Number.
         EEPROM.commit();
         Serial.println(F("Cartao Mestre desvinculado do dispositivo"));
@@ -348,25 +348,25 @@ void loop() {
 
 /////////////////////////////////////////  Access Granted    ///////////////////////////////////
 void granted(uint16_t setDelay) {
-  digitalWrite(blueLed, LED_OFF);  // Turn off blue LED
-  digitalWrite(redLed, LED_OFF);   // Turn off red LED
-  digitalWrite(greenLed, LED_ON);  // Turn on green LED
-  digitalWrite(relay, LOW);        // Unlock door!
+  digitalWrite(LedAzul, LED_OFF);  // Turn off blue LED
+  digitalWrite(LedVermelho, LED_OFF);   // Turn off red LED
+  digitalWrite(LedVerde, LED_ON);  // Turn on green LED
+  digitalWrite(Rele, LOW);        // Unlock door!
   delay(setDelay);                 // Hold door lock open for given seconds
-  digitalWrite(relay, HIGH);       // Relock door
+  digitalWrite(Rele, HIGH);       // Relock door
 
   //Mantém acesso liberado até acionar o sensor de porta
-  while (digitalRead(PortaAberta)) digitalWrite(relay, LOW);
-  digitalWrite(relay, HIGH);
-  while (digitalRead(PortaAberta)) digitalWrite(greenLed, LOW);
-  digitalWrite(greenLed, HIGH);
+  while (digitalRead(PortaAberta)) digitalWrite(Rele, LOW);
+  digitalWrite(Rele, HIGH);
+  while (digitalRead(PortaAberta)) digitalWrite(LedVerde, LOW);
+  digitalWrite(LedVerde, HIGH);
   lcd.clear();  // limpa a tela
 }
 ///////////////////////////////////////// Access Denied  ///////////////////////////////////
 void denied() {
-  digitalWrite(greenLed, LED_OFF);  // Make sure green LED is off
-  digitalWrite(blueLed, LED_OFF);   // Make sure blue LED is off
-  digitalWrite(redLed, LED_ON);     // Turn on red LED
+  digitalWrite(LedVerde, LED_OFF);  // Make sure green LED is off
+  digitalWrite(LedAzul, LED_OFF);   // Make sure blue LED is off
+  digitalWrite(LedVermelho, LED_ON);     // Turn on red LED
   delay(1000);
 }
 
@@ -412,9 +412,9 @@ void ShowReaderDetails() {
     Serial.println(F("ALERTA: Falha na comunicacao, o modulo MFRC522 esta conectado corretamente?"));
     Serial.println(F("SISTEMA ABORTADO: Verifique as conexoes."));
     // Visualize system is halted
-    digitalWrite(greenLed, LED_OFF);  // Make sure green LED is off
-    digitalWrite(blueLed, LED_OFF);   // Make sure blue LED is off
-    digitalWrite(redLed, LED_ON);     // Turn on red LED
+    digitalWrite(LedVerde, LED_OFF);  // Make sure green LED is off
+    digitalWrite(LedAzul, LED_OFF);   // Make sure blue LED is off
+    digitalWrite(LedVermelho, LED_ON);     // Turn on red LED
     while (true)
       ;  // do not go further
   }
@@ -422,26 +422,26 @@ void ShowReaderDetails() {
 
 ///////////////////////////////////////// Cycle Leds (Program Mode) ///////////////////////////////////
 void cycleLeds() {
-  digitalWrite(redLed, LED_OFF);   // Make sure red LED is off
-  digitalWrite(greenLed, LED_ON);  // Make sure green LED is on
-  digitalWrite(blueLed, LED_OFF);  // Make sure blue LED is off
+  digitalWrite(LedVermelho, LED_OFF);   // Make sure red LED is off
+  digitalWrite(LedVerde, LED_ON);  // Make sure green LED is on
+  digitalWrite(LedAzul, LED_OFF);  // Make sure blue LED is off
   delay(200);
-  digitalWrite(redLed, LED_OFF);    // Make sure red LED is off
-  digitalWrite(greenLed, LED_OFF);  // Make sure green LED is off
-  digitalWrite(blueLed, LED_ON);    // Make sure blue LED is on
+  digitalWrite(LedVermelho, LED_OFF);    // Make sure red LED is off
+  digitalWrite(LedVerde, LED_OFF);  // Make sure green LED is off
+  digitalWrite(LedAzul, LED_ON);    // Make sure blue LED is on
   delay(200);
-  digitalWrite(redLed, LED_ON);     // Make sure red LED is on
-  digitalWrite(greenLed, LED_OFF);  // Make sure green LED is off
-  digitalWrite(blueLed, LED_OFF);   // Make sure blue LED is off
+  digitalWrite(LedVermelho, LED_ON);     // Make sure red LED is on
+  digitalWrite(LedVerde, LED_OFF);  // Make sure green LED is off
+  digitalWrite(LedAzul, LED_OFF);   // Make sure blue LED is off
   delay(200);
 }
 
 //////////////////////////////////////// Normal Mode Led  ///////////////////////////////////
 void normalModeOn() {
-  digitalWrite(blueLed, LED_ON);    // Blue LED ON and ready to read card
-  digitalWrite(redLed, LED_OFF);    // Make sure Red LED is off
-  digitalWrite(greenLed, LED_OFF);  // Make sure Green LED is off
-  digitalWrite(relay, HIGH);        // Make sure Door is Locked
+  digitalWrite(LedAzul, LED_ON);    // Blue LED ON and ready to read card
+  digitalWrite(LedVermelho, LED_OFF);    // Make sure Red LED is off
+  digitalWrite(LedVerde, LED_OFF);  // Make sure Green LED is off
+  digitalWrite(Rele, HIGH);        // Make sure Door is Locked
 }
 
 //////////////////////////////////////// Read an ID from EEPROM //////////////////////////////
@@ -545,57 +545,57 @@ boolean findID(byte find[]) {
 ///////////////////////////////////////// Write Success to EEPROM   ///////////////////////////////////
 // Flashes the green LED 3 times to indicate a successful write to EEPROM
 void successWrite() {
-  digitalWrite(blueLed, LED_OFF);   // Make sure blue LED is off
-  digitalWrite(redLed, LED_OFF);    // Make sure red LED is off
-  digitalWrite(greenLed, LED_OFF);  // Make sure green LED is on
+  digitalWrite(LedAzul, LED_OFF);   // Make sure blue LED is off
+  digitalWrite(LedVermelho, LED_OFF);    // Make sure red LED is off
+  digitalWrite(LedVerde, LED_OFF);  // Make sure green LED is on
   delay(200);
-  digitalWrite(greenLed, LED_ON);  // Make sure green LED is on
+  digitalWrite(LedVerde, LED_ON);  // Make sure green LED is on
   delay(200);
-  digitalWrite(greenLed, LED_OFF);  // Make sure green LED is off
+  digitalWrite(LedVerde, LED_OFF);  // Make sure green LED is off
   delay(200);
-  digitalWrite(greenLed, LED_ON);  // Make sure green LED is on
+  digitalWrite(LedVerde, LED_ON);  // Make sure green LED is on
   delay(200);
-  digitalWrite(greenLed, LED_OFF);  // Make sure green LED is off
+  digitalWrite(LedVerde, LED_OFF);  // Make sure green LED is off
   delay(200);
-  digitalWrite(greenLed, LED_ON);  // Make sure green LED is on
+  digitalWrite(LedVerde, LED_ON);  // Make sure green LED is on
   delay(200);
 }
 
 ///////////////////////////////////////// Write Failed to EEPROM   ///////////////////////////////////
 // Flashes the red LED 3 times to indicate a failed write to EEPROM
 void failedWrite() {
-  digitalWrite(blueLed, LED_OFF);   // Make sure blue LED is off
-  digitalWrite(redLed, LED_OFF);    // Make sure red LED is off
-  digitalWrite(greenLed, LED_OFF);  // Make sure green LED is off
+  digitalWrite(LedAzul, LED_OFF);   // Make sure blue LED is off
+  digitalWrite(LedVermelho, LED_OFF);    // Make sure red LED is off
+  digitalWrite(LedVerde, LED_OFF);  // Make sure green LED is off
   delay(200);
-  digitalWrite(redLed, LED_ON);  // Make sure red LED is on
+  digitalWrite(LedVermelho, LED_ON);  // Make sure red LED is on
   delay(200);
-  digitalWrite(redLed, LED_OFF);  // Make sure red LED is off
+  digitalWrite(LedVermelho, LED_OFF);  // Make sure red LED is off
   delay(200);
-  digitalWrite(redLed, LED_ON);  // Make sure red LED is on
+  digitalWrite(LedVermelho, LED_ON);  // Make sure red LED is on
   delay(200);
-  digitalWrite(redLed, LED_OFF);  // Make sure red LED is off
+  digitalWrite(LedVermelho, LED_OFF);  // Make sure red LED is off
   delay(200);
-  digitalWrite(redLed, LED_ON);  // Make sure red LED is on
+  digitalWrite(LedVermelho, LED_ON);  // Make sure red LED is on
   delay(200);
 }
 
 ///////////////////////////////////////// Success Remove UID From EEPROM  ///////////////////////////////////
 // Flashes the blue LED 3 times to indicate a success delete to EEPROM
 void successDelete() {
-  digitalWrite(blueLed, LED_OFF);   // Make sure blue LED is off
-  digitalWrite(redLed, LED_OFF);    // Make sure red LED is off
-  digitalWrite(greenLed, LED_OFF);  // Make sure green LED is off
+  digitalWrite(LedAzul, LED_OFF);   // Make sure blue LED is off
+  digitalWrite(LedVermelho, LED_OFF);    // Make sure red LED is off
+  digitalWrite(LedVerde, LED_OFF);  // Make sure green LED is off
   delay(200);
-  digitalWrite(blueLed, LED_ON);  // Make sure blue LED is on
+  digitalWrite(LedAzul, LED_ON);  // Make sure blue LED is on
   delay(200);
-  digitalWrite(blueLed, LED_OFF);  // Make sure blue LED is off
+  digitalWrite(LedAzul, LED_OFF);  // Make sure blue LED is off
   delay(200);
-  digitalWrite(blueLed, LED_ON);  // Make sure blue LED is on
+  digitalWrite(LedAzul, LED_ON);  // Make sure blue LED is on
   delay(200);
-  digitalWrite(blueLed, LED_OFF);  // Make sure blue LED is off
+  digitalWrite(LedAzul, LED_OFF);  // Make sure blue LED is off
   delay(200);
-  digitalWrite(blueLed, LED_ON);  // Make sure blue LED is on
+  digitalWrite(LedAzul, LED_ON);  // Make sure blue LED is on
   delay(200);
 }
 
@@ -608,12 +608,12 @@ boolean isMaster(byte test[]) {
     return false;
 }
 
-bool monitorWipeButton(uint32_t interval) {
+bool monitorBotaoWipeutton(uint32_t interval) {
   uint32_t now = (uint32_t)millis();
   while ((uint32_t)millis() - now < interval) {
     // check on every half a second
     if (((uint32_t)millis() % 500) == 0) {
-      if (digitalRead(wipeB) != LOW)
+      if (digitalRead(BotaoWipe) != LOW)
         return false;
     }
   }
