@@ -66,8 +66,6 @@ Versão : 5 - Alfa
 #include <MFRC522.h>  // Library for Mifare RC522 Devices
 #include <LiquidCrystal_I2C.h>
 #include <Wire.h>
-#include <SPI.h>
-#include <MFRC522.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
 
@@ -209,6 +207,10 @@ Caso contrário, são efetuadas tentativas de conexão*/
   Serial.println(".");
   }  
 
+  // Configurar as funções de retorno de chamada para o cliente MQTT
+  client.setCallback(callback);
+  client.setServer(mqttServer, mqttPort);
+
   // Conectar-se ao servidor MQTT
   client.connect("ESP32Client", mqttUser, mqttPassword);
   while (!client.connected()) {
@@ -221,8 +223,6 @@ Caso contrário, são efetuadas tentativas de conexão*/
       delay(2000);
     }
   }
-
-  client.setCallback(callback);
 
   // Inscrever-se no tópico
   client.subscribe(subtopic);
