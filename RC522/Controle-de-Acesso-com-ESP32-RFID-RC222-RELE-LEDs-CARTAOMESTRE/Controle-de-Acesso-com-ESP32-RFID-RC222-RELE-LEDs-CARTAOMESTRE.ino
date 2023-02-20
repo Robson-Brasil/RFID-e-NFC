@@ -107,7 +107,7 @@ const char* mqttPassword = "loboalfa";
 // Definir as credenciais no servidor MQTT
 const char* subtopic = "LEITURA";
 const char* pubtopicnegado = "NEGADO";
-const char* pubtopicautorizado = "UTORIZADO";
+const char* pubtopicautorizado = "AUTORIZADO";
 
 // Inicializar o cliente WiFi
 WiFiClient wifiClient;
