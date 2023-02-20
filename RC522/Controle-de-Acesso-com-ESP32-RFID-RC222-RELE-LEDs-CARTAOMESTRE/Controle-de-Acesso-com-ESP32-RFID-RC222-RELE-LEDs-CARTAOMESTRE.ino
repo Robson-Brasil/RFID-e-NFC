@@ -105,9 +105,9 @@ const char* mqttUser = "RobsonBrasil";
 const char* mqttPassword = "loboalfa";
 
 // Definir as credenciais no servidor MQTT
-const char* subtopic = "RFID/Acesso/Estado";
-const char* pubtopicnegado = "RFID/Acesso/Negado";
-const char* pubtopicautorizado = "RFID/Acesso/Autorizado";
+const char* subtopic = "LEITURA";
+const char* pubtopicnegado = "NEGADO";
+const char* pubtopicautorizado = "UTORIZADO";
 
 // Inicializar o cliente WiFi
 WiFiClient wifiClient;
@@ -226,6 +226,8 @@ Caso contrário, são efetuadas tentativas de conexão*/
 
   // Inscrever-se no tópico
   client.subscribe(subtopic);
+  client.subscribe(pubtopicautorizado);  
+  client.subscribe(pubtopicnegado); 
 
   //If you set Antenna Gain to Max it will increase reading distance
   //mfrc522.PCD_SetAntennaGain(mfrc522.RxGain_max);
@@ -348,6 +350,9 @@ void reconnectMQTT() {
   client.subscribe(subtopic);
 }
 
+void reconnect() {
+  // ...
+}
 ///////////////////////////////////////// Main Loop ///////////////////////////////////
 void loop() {
 
