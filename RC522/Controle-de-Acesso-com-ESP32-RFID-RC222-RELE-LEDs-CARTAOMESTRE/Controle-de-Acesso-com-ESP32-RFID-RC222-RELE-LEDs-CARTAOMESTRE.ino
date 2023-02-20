@@ -78,6 +78,10 @@ Versão : 5 - Alfa
 #include <MFRC522.h>  // Library for Mifare RC522 Devices
 #include <LiquidCrystal_I2C.h>
 #include <Wire.h>
+#include <SPI.h>
+#include <MFRC522.h>
+#include <WiFi.h>
+#include <PubSubClient.h>
 
 /*
 Em vez de um relé, você pode querer usar um servo. Os servos também podem bloquear e desbloquear fechaduras de portas
@@ -103,6 +107,36 @@ Em vez de um relé, você pode querer usar um servo. Os servos também podem blo
 #define LED_ON HIGH
 #define LED_OFF LOW
 #endif
+
+// Definir as credenciais da rede WiFi
+const char* ssid = "RVR 2,4GHz";
+const char* password = "RodrigoValRobson2021";
+
+// Definir as credenciais do servidor MQTT
+const char* mqttServer = "192.168.15.10";
+const int mqttPort = 1883;
+const char* mqttUser = "RobsonBrasil";
+const char* mqttPassword = "loboalfa";
+
+// Definir as credenciais no servidor MQTT
+const char* subtopic = "RFID/Acesso/Estado";
+const char* pubtopic = "RFID/Acesso/Comando";
+
+// Inicializar o cliente WiFi
+WiFiClient wifiClient;
+
+// Inicializar o cliente MQTT
+PubSubClient client(mqttServer, mqttPort, wifiClient);
+
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Mensagem recebida no tópico: ");
+  Serial.println(subtopic);
+  Serial.print("Conteúdo: ");
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
+}
 
 constexpr uint8_t LedVermelho = 27;  // Set Led Pins
 constexpr uint8_t LedVerde = 26;
@@ -177,8 +211,35 @@ void setup() {
 
   //Protocol Configuration
   Serial.begin(115200);  // Initialize serial communications with PC
+  while (!Serial);
   SPI.begin();           // MFRC522 Hardware uses SPI protocol
   mfrc522.PCD_Init();    // Initialize MFRC522 Hardware
+
+    // Conectar-se à rede WiFi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Conectando à rede WiFi...");
+  }
+  Serial.println("Conectado à rede WiFi!");
+
+  // Conectar-se ao servidor MQTT
+  client.connect("ESP32Client", mqttUser, mqttPassword);
+  while (!client.connected()) {
+    Serial.println("Conectando ao servidor MQTT...");
+    if (client.connect("ESP32Client", mqttUser, mqttPassword)) {
+      Serial.println("Conectado ao servidor MQTT!");
+    } else {
+      Serial.print("Falha na conexão ao servidor MQTT, código de erro: ");
+      Serial.println(client.state());
+      delay(2000);
+    }
+  }
+
+  client.setCallback(callback);
+
+  // Inscrever-se no tópico
+  client.subscribe(subtopic);
 
   //If you set Antenna Gain to Max it will increase reading distance
   //mfrc522.PCD_SetAntennaGain(mfrc522.RxGain_max);
@@ -256,6 +317,24 @@ void setup() {
   // turn on LCD backlight
   lcd.backlight();
 }
+
+void reconnectMQTT() {
+  // Enquanto não estiver conectado, tente se reconectar
+  while (!client.connected()) {
+    Serial.println("Conectando ao servidor MQTT...");
+    if (client.connect("ESP32Client", mqttUser, mqttPassword)) {
+      Serial.println("Conectado ao servidor MQTT!");
+    } else {
+      Serial.print("Falha na conexão ao servidor MQTT, código de erro: ");
+      Serial.println(client.state());
+      delay(2000);
+    }
+  }
+
+  // Inscrever-se no tópico
+  client.subscribe(subtopic);
+}
+
 ///////////////////////////////////////// Main Loop ///////////////////////////////////
 void loop() {
 
@@ -341,9 +420,15 @@ void loop() {
         delay(5000);
         lcd.clear();  // limpa a tela
         denied();
+
       }
     }
   }
+// Verifica a conexão com o servidor MQTT
+  if (!client.connected()) {
+    reconnectMQTT();
+  }
+  client.loop();  
 }
 
 /////////////////////////////////////////  Access Granted    ///////////////////////////////////
@@ -352,9 +437,9 @@ void granted(uint16_t setDelay) {
   digitalWrite(LedVermelho, LED_OFF);   // Turn off red LED
   digitalWrite(LedVerde, LED_ON);  // Turn on green LED
   digitalWrite(Rele, LOW);        // Unlock door!
+
   delay(setDelay);                 // Hold door lock open for given seconds
   digitalWrite(Rele, HIGH);       // Relock door
-
   //Mantém acesso liberado até acionar o sensor de porta
   while (digitalRead(PortaAberta)) digitalWrite(Rele, LOW);
   digitalWrite(Rele, HIGH);
@@ -366,7 +451,7 @@ void granted(uint16_t setDelay) {
 void denied() {
   digitalWrite(LedVerde, LED_OFF);  // Make sure green LED is off
   digitalWrite(LedAzul, LED_OFF);   // Make sure blue LED is off
-  digitalWrite(LedVermelho, LED_ON);     // Turn on red LED
+
   delay(1000);
 }
 
@@ -389,7 +474,21 @@ uint8_t getID() {
     Serial.print(readCard[i], HEX);
     lcd.setCursor(0, 2);
     lcd.print("USUARIO  AUTORIZADO?");
-  }
+
+    // Verifica se o cartão é válido
+    /*if (readCard[i] == mfrc522.uid.uidByte[i]) {
+  
+      // Publicando mensagem no tópico
+      client.publish("RFID/Acesso/Comando", "AUTORIZADO");
+
+     } else {
+ 
+      // Publicando mensagem no tópico
+      client.publish("RFID/Acesso/Comando", "NAO AUTORIZADO!");
+   
+    }*/
+  }    
+    
   Serial.println("");
   mfrc522.PICC_HaltA();  // Stop reading
   return 1;
@@ -449,6 +548,20 @@ void readID(uint8_t number) {
   uint8_t start = (number * 4) + 2;          // Figure out starting position
   for (uint8_t i = 0; i < 4; i++) {          // Loop 4 times to get the 4 Bytes
     storedCard[i] = EEPROM.read(start + i);  // Assign values read from EEPROM to array
+
+    // Verifica se o cartão é válido
+    if (storedCard[i] == EEPROM.read(start + i)) {
+  
+      // Publicando mensagem no tópico
+      client.publish("RFID/Acesso/Comando", "AUTORIZADO");
+
+     } else {
+ 
+      // Publicando mensagem no tópico
+      client.publish("RFID/Acesso/Comando", "NAO AUTORIZADO!");
+   
+    }
+    
   }
 }
 
@@ -499,7 +612,6 @@ void deleteID(byte a[]) {
     Serial.println(F("ID removido da EEPROM com sucesso"));
   }
 }
-
 ///////////////////////////////////////// Check Bytes   ///////////////////////////////////
 boolean checkTwo(byte a[], byte b[]) {
   if (a[0] != 0)                     // Make sure there is something in the array first
@@ -514,7 +626,6 @@ boolean checkTwo(byte a[], byte b[]) {
     return false;  // Return false
   }
 }
-
 ///////////////////////////////////////// Find Slot   ///////////////////////////////////
 uint8_t findIDSLOT(byte find[]) {
   uint8_t count = EEPROM.read(0);         // Read the first Byte of EEPROM that
@@ -527,7 +638,6 @@ uint8_t findIDSLOT(byte find[]) {
     }
   }
 }
-
 ///////////////////////////////////////// Find ID From EEPROM   ///////////////////////////////////
 boolean findID(byte find[]) {
   uint8_t count = EEPROM.read(0);         // Read the first Byte of EEPROM that
@@ -541,7 +651,6 @@ boolean findID(byte find[]) {
   }
   return false;
 }
-
 ///////////////////////////////////////// Write Success to EEPROM   ///////////////////////////////////
 // Flashes the green LED 3 times to indicate a successful write to EEPROM
 void successWrite() {
@@ -560,7 +669,6 @@ void successWrite() {
   digitalWrite(LedVerde, LED_ON);  // Make sure green LED is on
   delay(200);
 }
-
 ///////////////////////////////////////// Write Failed to EEPROM   ///////////////////////////////////
 // Flashes the red LED 3 times to indicate a failed write to EEPROM
 void failedWrite() {
@@ -579,7 +687,6 @@ void failedWrite() {
   digitalWrite(LedVermelho, LED_ON);  // Make sure red LED is on
   delay(200);
 }
-
 ///////////////////////////////////////// Success Remove UID From EEPROM  ///////////////////////////////////
 // Flashes the blue LED 3 times to indicate a success delete to EEPROM
 void successDelete() {
@@ -598,7 +705,6 @@ void successDelete() {
   digitalWrite(LedAzul, LED_ON);  // Make sure blue LED is on
   delay(200);
 }
-
 ////////////////////// Check readCard IF is masterCard   ///////////////////////////////////
 // Check to see if the ID passed is the master programing card
 boolean isMaster(byte test[]) {
