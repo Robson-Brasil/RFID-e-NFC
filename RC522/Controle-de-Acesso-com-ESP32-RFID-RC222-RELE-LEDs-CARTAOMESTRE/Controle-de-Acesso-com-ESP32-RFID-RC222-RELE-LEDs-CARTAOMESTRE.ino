@@ -11,14 +11,11 @@ LCD I2C
 Cadastramento por Cartão Mestre
 Versão : 5 - Alfa
 Última Modificação : 15/22/2023
-
    --------------------------------------------------------------------------------------------------------------------
    Example sketch/program showing An Arduino Door Access Control featuring RFID, EEPROM, Rele
    --------------------------------------------------------------------------------------------------------------------
    This is a MFRC522 library example; for further details and other examples see: https://github.com/miguelbalboa/rfid
-
    This example showing a complete Door Access Control System
-
   Simple Work Flow (not limited to) :
                                      +---------+
   +----------------------------------->READ TAGS+^------------------------------------------+
@@ -42,24 +39,15 @@ Versão : 5 - Alfa
   +-------+EXIT|     |DELETE FROM|     |ADD TO|             |                               |
         +----+     |  EEPROM   |     |EEPROM|             |                               |
                    +-----------+     +------+             +-------------------------------+
-
-
    Use a Master Card which is act as Programmer then you can able to choose card holders who will granted access or not
-
  * **Easy User Interface**
-
    Just one RFID tag needed whether Delete or Add Tags. You can choose to use Leds for output or Serial LCD module to inform users.
-
  * **Stores Information on EEPROM**
-
    Information stored on non volatile Arduino's EEPROM memory to preserve Users' tag and Master Card. No Information lost
    if power lost. EEPROM has unlimited Read cycle but roughly 100,000 limited Write cycle.
-
  * **Security**
    To keep it simple we are going to use Tag's Unique IDs. It's simple and not hacker proof.
-
    @license Released into the public domain.
-
    Typical pin layout used:
    ---------------------------------------------------------------------------------------------------------
                MFRC522      Arduino       Arduino   Arduino    Arduino          Arduino     ESP32
@@ -120,23 +108,14 @@ const char* mqttPassword = "loboalfa";
 
 // Definir as credenciais no servidor MQTT
 const char* subtopic = "RFID/Acesso/Estado";
-const char* pubtopic = "RFID/Acesso/Comando";
+const char* pubtopicnegado = "RFID/Acesso/Negado";
+const char* pubtopicautorizado = "RFID/Acesso/Autorizado";
 
 // Inicializar o cliente WiFi
 WiFiClient wifiClient;
 
 // Inicializar o cliente MQTT
 PubSubClient client(mqttServer, mqttPort, wifiClient);
-
-void callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Mensagem recebida no tópico: ");
-  Serial.println(subtopic);
-  Serial.print("Conteúdo: ");
-  for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);
-  }
-  Serial.println();
-}
 
 constexpr uint8_t LedVermelho = 27;  // Set Led Pins
 constexpr uint8_t LedVerde = 26;
@@ -216,12 +195,19 @@ void setup() {
   mfrc522.PCD_Init();    // Initialize MFRC522 Hardware
 
     // Conectar-se à rede WiFi
+
+ /* Se já está conectado a rede WI-FI, nada é feito.
+Caso contrário, são efetuadas tentativas de conexão*/
+  if (WiFi.status() == WL_CONNECTED)
+    return;
+    
   WiFi.begin(ssid, password);
+  Serial.println("Conectando à rede WiFi...");
+
   while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("Conectando à rede WiFi...");
-  }
-  Serial.println("Conectado à rede WiFi!");
+  delay(500);  
+  Serial.println(".");
+  }  
 
   // Conectar-se ao servidor MQTT
   client.connect("ESP32Client", mqttUser, mqttPassword);
@@ -318,6 +304,32 @@ void setup() {
   lcd.backlight();
 }
 
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Mensagem recebida no tópico: ");
+  Serial.println(topic);
+  Serial.print("Conteúdo: ");
+
+  String data = "";
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+  }
+
+  if (strcmp(topic, subtopic)) {
+    for (unsigned int i = 0; i < length; i++) {
+      Serial.print((char)payload[i]);
+      data += (char)payload[i];
+    }
+  }    
+
+  Serial.println();
+
+  if (strcmp((char*)payload, "Negado") == 0) {
+    client.publish(pubtopicnegado, "Negado");
+  } else {
+    client.publish(pubtopicautorizado, "Autorizado");
+  }
+}
+
 void reconnectMQTT() {
   // Enquanto não estiver conectado, tente se reconectar
   while (!client.connected()) {
@@ -327,6 +339,7 @@ void reconnectMQTT() {
     } else {
       Serial.print("Falha na conexão ao servidor MQTT, código de erro: ");
       Serial.println(client.state());
+      Serial.println("Haverá nova tentativa de conexão em 2s");      
       delay(2000);
     }
   }
@@ -480,7 +493,6 @@ uint8_t getID() {
   
       // Publicando mensagem no tópico
       client.publish("RFID/Acesso/Comando", "AUTORIZADO");
-
      } else {
  
       // Publicando mensagem no tópico
@@ -548,23 +560,10 @@ void readID(uint8_t number) {
   uint8_t start = (number * 4) + 2;          // Figure out starting position
   for (uint8_t i = 0; i < 4; i++) {          // Loop 4 times to get the 4 Bytes
     storedCard[i] = EEPROM.read(start + i);  // Assign values read from EEPROM to array
-
-    // Verifica se o cartão é válido
-    if (storedCard[i] == EEPROM.read(start + i)) {
-  
-      // Publicando mensagem no tópico
-      client.publish("RFID/Acesso/Comando", "AUTORIZADO");
-
-     } else {
- 
-      // Publicando mensagem no tópico
-      client.publish("RFID/Acesso/Comando", "NAO AUTORIZADO!");
    
-    }
-    
   }
+  
 }
-
 ///////////////////////////////////////// Add ID to EEPROM   ///////////////////////////////////
 void writeID(byte a[]) {
   if (!findID(a)) {                    // Before we write to the EEPROM, check to see if we have seen this card before!
