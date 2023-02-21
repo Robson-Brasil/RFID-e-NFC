@@ -9,8 +9,8 @@ Download Board ESP32 (2.0.5):
 Módulo RFID RC-522
 LCD I2C
 Cadastramento por Cartão Mestre
-Versão : 5 - Alfa
-Última Modificação : 15/22/2023
+Versão : 10 - Alfa
+Última Modificação : 21/22/2023
    --------------------------------------------------------------------------------------------------------------------
    Example sketch/program showing An Arduino Door Access Control featuring RFID, EEPROM, Rele
    --------------------------------------------------------------------------------------------------------------------
