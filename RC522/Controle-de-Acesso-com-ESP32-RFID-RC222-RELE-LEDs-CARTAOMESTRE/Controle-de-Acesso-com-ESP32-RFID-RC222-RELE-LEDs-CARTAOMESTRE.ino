@@ -95,8 +95,8 @@ Layout típico de pinos usados:
 #endif
 
 // Definir as credenciais da rede WiFi
-const char *ssid = "RVR 2,4GHz";
-const char *password = "RodrigoValRobson2021";
+const char *ssid = "IoT";
+const char *password = "@IoT@S3nh@S3gur@";
 
 // Definir as credenciais do servidor MQTT
 const char *mqttServer = "192.168.15.10";
