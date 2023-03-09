@@ -397,6 +397,12 @@ void reconnect()
 ///////////////////////////////////////// Main Loop ///////////////////////////////////
 void loop()
 {
+  // Verifica a conexão com o servidor MQTT
+  if (!client.connected())
+  {
+    reconnectMQTT();
+  }
+  client.loop();  
 
   lcd.setCursor(5, 0);
   // imprimir mensagem estática
@@ -508,12 +514,7 @@ void loop()
       }
     }
   }
-  // Verifica a conexão com o servidor MQTT
-  if (!client.connected())
-  {
-    reconnectMQTT();
-  }
-  client.loop();
+
 }
 /////////////////////////////////////////  Access Granted    ///////////////////////////////////
 void granted(uint16_t setDelay)
