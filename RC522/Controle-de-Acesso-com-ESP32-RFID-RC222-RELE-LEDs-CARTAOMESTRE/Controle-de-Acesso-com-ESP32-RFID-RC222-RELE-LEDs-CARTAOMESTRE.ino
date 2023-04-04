@@ -99,7 +99,7 @@ const char *ssid = "IoT";
 const char *password = "@IoT@S3nh@S3gur@";
 
 // Definir as credenciais do servidor MQTT
-const char *mqttServer = "192.168.15.10";
+const char *mqttServer = "192.168.15.30";
 const int mqttPort = 1883;
 const char *mqttUser = "RobsonBrasil";
 const char *mqttPassword = "loboalfa";
