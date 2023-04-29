@@ -5,7 +5,7 @@ Autor : Robson Brasil
 Dispositivo : ESP32 WROOM32
 Preferences--> Aditional boards Manager URLs:
                                   http://arduino.esp8266.com/stable/package_esp8266com_index.json,https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-Download Board ESP32 (2.0.5):
+Download Board ESP32 (2.0.8):
 Módulo RFID RC-522
 LCD I2C
 Cadastramento por Cartão Mestre
