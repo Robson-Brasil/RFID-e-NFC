@@ -1,6 +1,7 @@
 /*
 IoT - Automação Residencial
 Controle de Acesso por RFID
+Cadastramento por Cartão Mestre
 Autor : Robson Brasil
 Dispositivo : ESP32 WROOM32
 Preferences--> Aditional boards Manager URLs:
@@ -8,11 +9,9 @@ Preferences--> Aditional boards Manager URLs:
 Download Board ESP32 (2.0.8):
 Módulo RFID RC-522
 LCD I2C
-Cadastramento por Cartão Mestre
 Versão : 20 - Alfa
 Última Modificação : 28/04/2023
 --------------------------------------------------------------------------------------------------------------------
-Example sketch/program showing An Arduino Door Access Control featuring RFID, EEPROM, Rele
 --------------------------------------------------------------------------------------------------------------------
 This is a MFRC522 library example; for further details and other examples see: https://github.com/miguelbalboa/rfid
 This example showing a complete Door Access Control System
