@@ -19,7 +19,7 @@
 #define LedVermelho 27
 #define Buzzer 17
 #define Rele 13  //Ligado em um LED para testes, toque-o pelo sensor que vc preferir
-#define PortaAberta 33  //Sensor de fim de curso, o RFID só lerá outro cartão, quando a porta for fechada
+#define PortaAberta 4  //Sensor de fim de curso, o RFID só lerá outro cartão, quando a porta for fechada
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Cria instância com MFRC522
 
