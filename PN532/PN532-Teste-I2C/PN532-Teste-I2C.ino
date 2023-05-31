@@ -13,7 +13,7 @@ PN532 nfc(pn532spi);
 #elif 1
 #include <PN532_HSU.h>
 #include <PN532.h>
-PN532_HSU pn532hsu(Serial1);
+PN532_HSU pn532hsu(Serial);
 PN532 nfc(pn532hsu);
 
 #else
